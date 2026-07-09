@@ -3,7 +3,7 @@
 Extensão (Manifest V3) que futuramente compõe um SaaS para vendedores da
 Shopee. A extensão **não** faz cadastro/login/cobrança — isso é
 responsabilidade do site. A extensão detecta a sessão criada no site e
-(futuramente) executa a automação na Shopee.
+executa a automação na Shopee.
 
 ## Arquitetura
 
