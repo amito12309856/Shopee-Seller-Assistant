@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Shopee Seller Assistant</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+  <div class="container">
+
+    <header class="header">
+      <h1>Shopee Seller Assistant</h1>
+      <p class="subtitle">Extensão para vendedores da Shopee</p>
+    </header>
+
+    <!-- =========================================================
+         SEÇÃO 1: SESSÃO
+         O login acontece no SITE. A extensão só reflete o status.
+         ========================================================= -->
+    <section id="sessionSection" class="card">
+
+      <div class="card-header">
+        <h2>Sessão</h2>
+        <span id="sessionBadge" class="badge badge-inactive">Verificando...</span>
+      </div>
+
+      <p id="sessionInfo" class="session-info"></p>
+
+      <div class="actions">
+        <button id="btnAbrirLogin" class="btn btn-primary hidden">Abrir login no site</button>
+        <button id="btnRecheckSession" class="btn btn-secondary hidden">Recarregar sessão</button>
+      </div>
+
+      <button id="btnSair" class="link-btn hidden">Sair (limpar sessão local)</button>
+
+    </section>
+
+    <!-- =========================================================
+         SEÇÃO 2: CONFIGURAÇÕES DA AUTOMAÇÃO
+         Bloqueada até existir uma sessão autenticada.
+         ========================================================= -->
+    <section id="settingsSection" class="card disabled">
+
+      <div class="card-header">
+        <h2>Configurações da Automação</h2>
+      </div>
+
+      <div class="overlay-msg" id="overlayMsg">
+        Faça login no site para desbloquear as configurações
+      </div>
+
+      <div class="form" id="settingsForm">
+
+        <div class="field">
+          <label for="quantidade">Quantidade de avaliações</label>
+          <input
+            type="number"
+            id="quantidade"
+            placeholder="Ex: 10"
+            min="0"
+          />
+        </div>
+
+        <div class="field">
+          <label for="mensagem">Mensagem de resposta</label>
+          <textarea
+            id="mensagem"
+            rows="5"
+            placeholder="Digite a mensagem que será usada como resposta padrão"
+          ></textarea>
+        </div>
+
+        <p id="pageWarning" class="page-warning hidden">
+          ⚠️ Esta aba não parece ser o Seller Center da Shopee. Abra o
+          Seller Center para executar a automação.
+        </p>
+
+        <div class="actions">
+          <button id="btnSalvar" class="btn btn-primary">Salvar Configurações</button>
+          <button id="btnExecutar" class="btn btn-secondary">Executar</button>
+          <button id="btnParar" class="btn btn-danger">Parar</button>
+        </div>
+
+        <p id="status" class="status"></p>
+
+      </div>
+
+    </section>
+
+    <footer class="footer">
+      <span>v0.4.0 — Estrutura profissional</span>
+    </footer>
+
+  </div>
+
+  <!--
+    Ordem importa (dependências carregam antes de quem as usa).
+    Caminhos são relativos a este arquivo: src/ui/popup/popup.html
+    "../../" sobe de src/ui/popup/ até src/.
+  -->
+  <script src="../../core/config.js"></script>
+  <script src="../../utils/logger.js"></script>
+  <script src="../../storage/storage.js"></script>
+  <script src="../../services/sessionApi.js"></script>
+  <script src="../../auth/session.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

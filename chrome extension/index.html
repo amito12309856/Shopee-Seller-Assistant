@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shopee Seller Assistant — Painel do Vendedor</title>
+<style>
+  /* =========================================================
+     TOKEN SYSTEM
+     Paleta inspirada na Shopee, mas tratada como ferramenta de
+     trabalho (dashboard), não como página de marketing.
+     ========================================================= */
+  :root {
+    --orange: #ee4d2d;
+    --orange-dark: #d8431f;
+    --orange-soft: #fff1ec;
+    --ink: #1a1a1a;
+    --muted: #767676;
+    --paper: #ffffff;
+    --surface: #faf9f7;
+    --border: #ececec;
+    --success: #1fab5b;
+    --success-soft: #eafaf1;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --font-display: "Segoe UI Semibold", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-body: "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-mono: "SF Mono", "Cascadia Code", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--font-body);
+    min-height: 100vh;
+  }
+
+  a { color: inherit; }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--orange);
+    outline-offset: 2px;
+  }
+
+  /* =========================================================
+     TOPO — marca + selo de que é um protótipo
+     ========================================================= */
+  .topbar {
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .brand-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+  }
+
+  .demo-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--orange-dark);
+    background: var(--orange-soft);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+
+  /* =========================================================
+     STEPPER — elemento de assinatura da página.
+     Numerado de propósito: é uma sequência real de etapas.
+     ========================================================= */
+  .stepper-wrap {
+    max-width: 640px;
+    margin: 28px auto 0;
+    padding: 0 20px;
+  }
+
+  .stepper {
+    display: flex;
+    align-items: center;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .step-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 2px solid var(--border);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+  }
+
+  .step.is-active .step-circle,
+  .step.is-done .step-circle {
+    border-color: var(--orange);
+    color: var(--orange);
+  }
+
+  .step.is-done .step-circle {
+    background: var(--orange);
+    color: #fff;
+  }
+
+  .step-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .step.is-active .step-label,
+  .step.is-done .step-label {
+    color: var(--ink);
+  }
+
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin: 0 -6px 20px;
+    transition: background-color 0.25s ease;
+  }
+
+  .step-line.is-done {
+    background: var(--orange);
+  }
+
+  /* =========================================================
+     ÁREA PRINCIPAL — cartão único que troca de conteúdo
+     conforme o estado (login / token / painel / tutorial)
+     ========================================================= */
+  .stage {
+    max-width: 440px;
+    margin: 28px auto 60px;
+    padding: 0 20px;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 26px;
+  }
+
+  .card-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--orange-dark);
+    margin: 0 0 6px;
+  }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  .card-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 22px;
+    line-height: 1.5;
+  }
+
+  /* ---- Formulário de login (visual apenas) ---- */
+  .field { margin-bottom: 14px; }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: inherit;
+  }
+
+  .field input:focus {
+    border-color: var(--orange);
+    outline: none;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 11px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 700;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+  }
+
+  .btn-primary {
+    background: var(--orange);
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: var(--orange-dark); }
+  .btn-primary:disabled { opacity: 0.6; cursor: default; }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    margin-top: 8px;
+  }
+
+  .btn-secondary:hover { background: #f0f0f0; }
+
+  .form-note {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 14px;
+    line-height: 1.5;
+  }
+
+  /* ---- Revelação do token fictício ---- */
+  .token-reveal {
+    text-align: center;
+    padding: 10px 0 4px;
+  }
+
+  .token-reveal .icon-circle {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: var(--success-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ---- Pílula de token (usada na revelação e no painel) ---- */
+  .token-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin: 14px 0;
+  }
+
+  .token-pill code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    overflow-wrap: anywhere;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    padding: 4px;
+    display: flex;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn:hover { color: var(--orange); background: var(--orange-soft); }
+
+  /* ---- Painel (status da licença) ---- */
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--success-soft);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    flex-shrink: 0;
+  }
+
+  .status-row strong {
+    font-size: 13px;
+    color: #157a41;
+  }
+
+  .expiry-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+
+  .field-label-sm {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--muted);
+    margin: 18px 0 0;
+  }
+
+  .actions-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .btn-icon-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .link-muted {
+    display: block;
+    text-align: center;
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: underline;
+    background: none;
+    border: none;
+  }
+
+  .link-muted:hover { color: var(--ink); }
+
+  /* ---- Tutorial ---- */
+  .tutorial-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 22px;
+    counter-reset: passo;
+  }
+
+  .tutorial-list li {
+    counter-increment: passo;
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .tutorial-list li:last-child { border-bottom: none; }
+
+  .tutorial-list li::before {
+    content: counter(passo);
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--orange-soft);
+    color: var(--orange-dark);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ---- Utilidades de visibilidade de "view" ---- */
+  .view { display: none; }
+  .view.is-visible { display: block; }
+
+  /* ---- Toast (feedback de ações simuladas) ---- */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--ink);
+    color: #fff;
+    font-size: 13px;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    max-width: 90vw;
+    text-align: center;
+  }
+
+  .toast.is-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="brand-mark">S</span>
+      Shopee Seller Assistant
+    </div>
+    <span class="demo-badge">Protótipo / MVP</span>
+  </div>
+
+  <!-- Stepper: reflete state.view via JS (classes is-active / is-done) -->
+  <div class="stepper-wrap">
+    <div class="stepper" id="stepper"></div>
+  </div>
+
+  <main class="stage">
+
+    <!-- ============ VIEW 1: LOGIN (apenas visual) ============ -->
+    <section class="view" id="view-login">
+      <div class="card">
+        <p class="card-eyebrow">Etapa 1 de 4</p>
+        <h1 class="card-title">Entrar na sua conta</h1>
+        <p class="card-subtitle">Acesse o painel do vendedor para gerenciar sua licença e baixar a extensão.</p>
+
+        <form id="loginForm">
+          <div class="field">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" placeholder="voce@sualoja.com.br" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="senha">Senha</label>
+            <input type="password" id="senha" placeholder="••••••••" autocomplete="off" />
+          </div>
+          <button type="submit" class="btn btn-primary" id="btnEntrar">Entrar</button>
+        </form>
+
+        <p class="form-note">
+          Isto é um protótipo de demonstração — nenhuma credencial é validada
+          e nenhum dado é enviado a um servidor.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ VIEW 2: TOKEN FICTÍCIO ============ -->
+    <section class="view" id="view-token">
+      <div class="card">
+        <p class="card-eyebrow">Etapa 2 de 4</p>
+        <div class="token-reveal">
+          <div class="icon-circle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M4 12.5l5 5L20 7" stroke="#1fab5b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h1 class="card-title">Login confirmado</h1>
+          <p class="card-subtitle">Geramos um token de sessão fictício para esta demonstração.</p>
+        </div>
+
+        <div class="token-pill">
+          <code id="tokenTextTokenView">—</code>
+        </div>
+
+        <button class="btn btn-primary" id="btnContinuarPainel">Continuar para o painel</button>
+      </div>
+    </section>
+
+    <!-- ============ VIEW 3: PAINEL ============ -->
+    <section class="view" id="view-painel">
+      <div class="card">
+        <p class="card-eyebrow">Etapa 3 de 4</p>
+        <h1 class="card-title">Painel do vendedor</h1>
+        <p class="card-subtitle">Dados simulados — nenhuma licença real está associada a esta conta.</p>
+
+        <div class="status-row">
+          <span class="status-dot"></span>
+          <strong>Licença ativa</strong>
+        </div>
+
+        <div class="expiry-row">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="#767676" stroke-width="2"/>
+            <path d="M12 7v5l3.5 2" stroke="#767676" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Expira em 72 horas
+        </div>
+
+        <p class="field-label-sm">Token da extensão</p>
+        <div class="token-pill">
+          <code id="tokenTextPainelView">—</code>
+          <button class="icon-btn" id="btnCopiarToken" title="Copiar token" aria-label="Copiar token">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M5 15V6a2 2 0 0 1 2-2h9" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="actions-grid">
+          <button class="btn btn-primary btn-icon-inline" id="btnDownload">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M4 19h16" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Baixar extensão
+          </button>
+          <button class="btn btn-secondary" id="btnAbrirTutorial">Abrir tutorial</button>
+        </div>
+
+        <button class="link-muted" id="btnSair">Sair e reiniciar demonstração</button>
+      </div>
+    </section>
+
+    <!-- ============ VIEW 4: TUTORIAL ============ -->
+    <section class="view" id="view-tutorial">
+      <div class="card">
+        <p class="card-eyebrow">Etapa 4 de 4</p>
+        <h1 class="card-title">Como instalar a extensão</h1>
+        <p class="card-subtitle">Passo a passo para carregar a extensão baixada no Chrome.</p>
+
+        <ol class="tutorial-list">
+          <li>Extraia o arquivo baixado em uma pasta no seu computador.</li>
+          <li>No Chrome, acesse <code>chrome://extensions</code>.</li>
+          <li>Ative a opção "Modo do desenvolvedor" no canto superior direito.</li>
+          <li>Clique em "Carregar sem compactação" e selecione a pasta extraída.</li>
+          <li>Abra a extensão e faça login para sincronizar com sua sessão do site.</li>
+        </ol>
+
+        <button class="btn btn-primary" id="btnVoltarPainel">Voltar ao painel</button>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  /**
+   * script.js (inline)
+   * ---------------------------------------------------------
+   * Este é um PROTÓTIPO de página única (SPA simples, sem
+   * framework). Todo o "fluxo" é simulado em memória:
+   *
+   *   state.view  → qual seção está visível
+   *   state.token → token fictício gerado no momento do login
+   *
+   * Propositalmente NÃO usamos localStorage/sessionStorage aqui:
+   * é uma demonstração de fluxo dentro de uma única página, então
+   * uma variável em memória é suficiente e mais simples — e evita
+   * qualquer dado "fake" sobrevivendo entre sessões do navegador
+   * de quem for testar o protótipo.
+   *
+   * INTEGRAÇÃO COM A EXTENSÃO (sem backend):
+   * Ao "logar", esta página tenta avisar a extensão via
+   * chrome.runtime.sendMessage(EXTENSION_ID, ...), usando a API
+   * externally_connectable do Chrome. A extensão apenas SALVA o
+   * que recebe — nenhuma validação real acontece em lugar nenhum
+   * ainda. Se a extensão não estiver instalada (ou o EXTENSION_ID
+   * abaixo estiver desatualizado), isso falha silenciosamente e o
+   * site continua funcionando normalmente sozinho.
+   * ---------------------------------------------------------
+   */
+
+  // TODO: depois de carregar a extensão em chrome://extensions
+  // (modo desenvolvedor), copie o ID gerado e cole aqui.
+  const EXTENSION_ID = "SEU_ID";
+
+  const STEPS = [
+    { id: "login", label: "Login" },
+    { id: "token", label: "Token" },
+    { id: "painel", label: "Painel" },
+    { id: "tutorial", label: "Tutorial" },
+  ];
+
+  const state = {
+    view: "login", // "login" | "token" | "painel" | "tutorial"
+    token: null,
+  };
+
+  // ----- Referências de elementos -----
+  const stepperEl = document.getElementById("stepper");
+  const toastEl = document.getElementById("toast");
+  const loginForm = document.getElementById("loginForm");
+  const btnEntrar = document.getElementById("btnEntrar");
+
+  /**
+   * Gera um token fictício só para preencher a UI. Não tem
+   * nenhum valor real — é puramente visual/demonstrativo.
+   */
+  function gerarTokenFicticio() {
+    const bloco = () => Math.random().toString(16).slice(2, 10);
+    return `shp_${bloco()}${bloco()}`.slice(0, 28);
+  }
+
+  /**
+   * Avisa a extensão (se instalada) que um login fictício
+   * acabou de acontecer, para que ela pare de pedir login e
+   * mostre o painel normalmente.
+   *
+   * Não lança erro para quem está usando só o site: se a API
+   * chrome.runtime não existir (navegador sem a extensão, ou
+   * página aberta fora de http/https), simplesmente não faz nada.
+   */
+  function avisarExtensaoDoLoginFicticio(dadosSessao) {
+    const temApiDeExtensao =
+      typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage;
+
+    if (!temApiDeExtensao || EXTENSION_ID.startsWith("COLE_AQUI")) {
+      console.info(
+        "[Site] Extensão não conectada (normal se você só estiver testando o site)."
+      );
+      return;
+    }
+
+    chrome.runtime.sendMessage(
+      EXTENSION_ID,
+      { type: "FAKE_LOGIN", payload: dadosSessao },
+      (resposta) => {
+        if (chrome.runtime.lastError) {
+          console.info("[Site] Extensão não respondeu:", chrome.runtime.lastError.message);
+          return;
+        }
+        if (resposta?.ok) {
+          mostrarToast("Extensão sincronizada com esta sessão.");
+        }
+      }
+    );
+  }
+
+  /**
+   * Mostra uma mensagem breve no canto inferior (feedback de
+   * ações simuladas, como "Download" ou "Copiar").
+   */
+  let toastTimeout;
+  function mostrarToast(texto) {
+    clearTimeout(toastTimeout);
+    toastEl.textContent = texto;
+    toastEl.classList.add("is-visible");
+    toastTimeout = setTimeout(() => toastEl.classList.remove("is-visible"), 2600);
+  }
+
+  /**
+   * Redesenha o stepper de acordo com state.view.
+   */
+  function renderStepper() {
+    const indiceAtual = STEPS.findIndex((s) => s.id === state.view);
+
+    stepperEl.innerHTML = STEPS.map((step, i) => {
+      const isDone = i < indiceAtual;
+      const isActive = i === indiceAtual;
+      const circleContent = isDone
+        ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+        : i + 1;
+
+      const stepHtml = `
+        <div class="step ${isDone ? "is-done" : ""} ${isActive ? "is-active" : ""}">
+          <div class="step-circle">${circleContent}</div>
+          <div class="step-label">${step.label}</div>
+        </div>`;
+
+      if (i === STEPS.length - 1) return stepHtml;
+
+      const lineHtml = `<div class="step-line ${i < indiceAtual ? "is-done" : ""}"></div>`;
+      return stepHtml + lineHtml;
+    }).join("");
+  }
+
+  /**
+   * Mostra somente a <section class="view"> correspondente ao
+   * state.view atual, e sincroniza o texto do token em qualquer
+   * lugar da página que o exiba.
+   */
+  function renderView() {
+    document.querySelectorAll(".view").forEach((el) => {
+      el.classList.toggle("is-visible", el.id === `view-${state.view}`);
+    });
+
+    const textoToken = state.token || "—";
+    const tokenTokenView = document.getElementById("tokenTextTokenView");
+    const tokenPainelView = document.getElementById("tokenTextPainelView");
+    if (tokenTokenView) tokenTokenView.textContent = textoToken;
+    if (tokenPainelView) tokenPainelView.textContent = textoToken;
+  }
+
+  function render() {
+    renderStepper();
+    renderView();
+  }
+
+  // ---------------------------------------------------------
+  // Ações (equivalentes ao que os botões acionam)
+  // ---------------------------------------------------------
+
+  function irParaView(view) {
+    state.view = view;
+    render();
+  }
+
+  loginForm.addEventListener("submit", (evento) => {
+    evento.preventDefault();
+
+    // Pequeno atraso simulado para dar sensação de "autenticando",
+    // já que não existe backend real por trás disso.
+    btnEntrar.disabled = true;
+    btnEntrar.textContent = "Entrando...";
+
+    setTimeout(() => {
+      state.token = gerarTokenFicticio();
+      btnEntrar.disabled = false;
+      btnEntrar.textContent = "Entrar";
+      loginForm.reset();
+      irParaView("token");
+
+      // Avisa a extensão (se instalada) para que ela pare de
+      // pedir login e mostre o painel normalmente.
+      avisarExtensaoDoLoginFicticio({
+        token: state.token,
+        plan: "pro",
+        expiresAt: Date.now() + 72 * 60 * 60 * 1000, // 72 horas, igual ao texto do painel
+      });
+    }, 650);
+  });
+
+  document.getElementById("btnContinuarPainel").addEventListener("click", () => {
+    irParaView("painel");
+  });
+
+  document.getElementById("btnAbrirTutorial").addEventListener("click", () => {
+    irParaView("tutorial");
+  });
+
+  document.getElementById("btnVoltarPainel").addEventListener("click", () => {
+    irParaView("painel");
+  });
+
+  document.getElementById("btnSair").addEventListener("click", () => {
+    state.token = null;
+    irParaView("login");
+  });
+
+  document.getElementById("btnCopiarToken").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(state.token || "");
+      mostrarToast("Token copiado para a área de transferência.");
+    } catch {
+      mostrarToast("Não foi possível copiar automaticamente.");
+    }
+  });
+
+  /**
+   * Simula o "Baixar extensão": gera um arquivo de texto no
+   * próprio navegador (via Blob) e dispara o download dele.
+   * É um download real de um arquivo-placeholder — deixamos
+   * isso explícito no conteúdo do arquivo e no toast, para não
+   * fingir que é o pacote de verdade da extensão.
+   */
+  document.getElementById("btnDownload").addEventListener("click", () => {
+    const conteudo =
+      "Shopee Seller Assistant — arquivo de demonstração\n\n" +
+      "Este NÃO é o pacote real da extensão. Na versão final do\n" +
+      "produto, este botão baixará o arquivo .zip da extensão\n" +
+      "publicado pelo backend.\n";
+
+    const blob = new Blob([conteudo], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "shopee-seller-assistant-demo.txt";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    mostrarToast("Download iniciado (arquivo de demonstração).");
+  });
+
+  // ---------------------------------------------------------
+  // Inicialização
+  // ---------------------------------------------------------
+  render();
+</script>
+
+</body>
+</html>

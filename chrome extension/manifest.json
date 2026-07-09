@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "Shopee Seller Assistant",
+  "version": "0.12.1",
+  "description": "Extensão para vendedores da Shopee. Autenticação e assinatura são gerenciadas pelo site; a extensão apenas detecta a sessão e executa a leitura da página somente quando o usuário aciona 'Executar'.",
+
+  "action": {
+    "default_popup": "src/ui/popup/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
+
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+
+  "background": {
+    "service_worker": "src/background/background.js"
+  },
+
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "activeTab"
+  ],
+
+  "host_permissions": [
+    "https://api.seusaas.com/*"
+  ],
+
+  "externally_connectable": {
+    "matches": [
+      "https://app.seusaas.com/*",
+      "https://*.seusaas.com/*",
+      "http://localhost:*/*",
+      "http://127.0.0.1:*/*"
+    ]
+  }
+}
+
+
